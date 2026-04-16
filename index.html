@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus.Sim</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="glass-panel">
+            <div class="logo">
+                <span class="logo-icon">🦠</span>
+                <h1>Nexus.Sim</h1>
+                <span class="badge">Research Grade</span>
+            </div>
+            <div class="top-controls">
+                <div class="equation-display" id="equationDisplay">
+                    dI/dt = βSI − γI
+                </div>
+                <div class="simulation-actions">
+                    <button id="btnPauseResume" class="btn primary">Start</button>
+                    <button id="btnStep" class="btn secondary">Step</button>
+                    <button id="btnReset" class="btn secondary">Reset</button>
+                    <button id="btnCredits" class="btn secondary">Credits</button>
+                    <select id="speedControl" class="select-modern">
+                        <option value="1">1x Speed</option>
+                        <option value="2">2x Speed</option>
+                        <option value="5">5x Speed</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Panel: Controls -->
+            <aside class="left-panel glass-panel">
+                <h2>Parameters</h2>
+                
+                <div class="control-group">
+                    <h3>Population System</h3>
+                    <div class="control-item">
+                        <label for="populationCount">Population: <span id="valPopulation">1000</span></label>
+                        <input type="range" id="populationCount" min="100" max="10000" step="100" value="1000">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Population Behavior</h3>
+                    <div class="control-item tooltip-container">
+                        <label for="immunityLevel">Base Immunity (1-10): <span id="valImmunity">5</span></label>
+                        <input type="range" id="immunityLevel" min="1" max="10" value="5">
+                        <span class="tooltip">Natural resistance to infection. Reduces transmission probability.</span>
+                    </div>
+                    <div class="control-item tooltip-container">
+                        <label for="hygieneLevel">Hygiene Level (1-10): <span id="valHygiene">5</span></label>
+                        <input type="range" id="hygieneLevel" min="1" max="10" value="5">
+                        <span class="tooltip">Personal hygiene practices. Reduces transmission rate (β).</span>
+                    </div>
+                    <div class="control-item tooltip-container">
+                        <label for="socialInteraction">Social Interaction (1-10): <span id="valSocial">5</span></label>
+                        <input type="range" id="socialInteraction" min="1" max="10" value="5">
+                        <span class="tooltip">Contact rate between individuals. Increases number of contacts.</span>
+                    </div>
+                    <div class="control-item tooltip-container">
+                        <label for="movementSpeed">Movement Speed (1-10): <span id="valMovement">5</span></label>
+                        <input type="range" id="movementSpeed" min="1" max="10" value="5">
+                        <span class="tooltip">Average speed of individuals. Affects mixing rate.</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Medical Interventions</h3>
+                    <div class="control-item tooltip-container">
+                        <label for="vaccinationRate">Vaccination Rate (%): <span id="valVaccination">0</span>%</label>
+                        <input type="range" id="vaccinationRate" min="0" max="100" value="0">
+                        <span class="tooltip">Percentage of population vaccinated.</span>
+                    </div>
+                    <div class="control-item tooltip-container">
+                        <label for="vaccineEff">Vaccine Effectiveness (%): <span id="valVaccineEff">90</span>%</label>
+                        <input type="range" id="vaccineEff" min="0" max="100" value="90">
+                        <span class="tooltip">Efficacy of applied vaccines.</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Public Policy</h3>
+                    <div class="control-item tooltip-container">
+                        <label for="lockdownIntensity">Lockdown Intensity (0-10): <span id="valLockdown">0</span></label>
+                        <input type="range" id="lockdownIntensity" min="0" max="10" value="0">
+                        <span class="tooltip">Reduces overall movement and social interaction proportionally.</span>
+                    </div>
+                    <div class="control-item tooltip-container">
+                        <label for="awarenessLevel">Awareness Level (1-10): <span id="valAwareness">5</span></label>
+                        <input type="range" id="awarenessLevel" min="1" max="10" value="5">
+                        <span class="tooltip">Public awareness. Indirectly boosts hygiene and interaction cautiousness.</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>Disease / Environment</h3>
+                    <div class="control-item tooltip-container">
+                        <label for="mutationChance">Mutation Chance (0-10): <span id="valMutation">1</span></label>
+                        <input type="range" id="mutationChance" min="0" max="10" value="1">
+                        <span class="tooltip">Probability of virus mutating during transmission.</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center Panel: Visualization -->
+            <main class="center-panel">
+                <div class="canvas-container glass-panel">
+                    <canvas id="simCanvas"></canvas>
+                    <button id="btnFullscreen" class="floating-btn" title="Toggle Fullscreen">⛶</button>
+                    <div class="overlay-stats">
+                        <div class="stat-box">
+                            <span class="stat-label">R-Value</span>
+                            <span class="stat-value" id="statRValue">--</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-label">Active</span>
+                            <span class="stat-value infected" id="statActive">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="charts-container glass-panel">
+                    <canvas id="sirChart"></canvas>
+                </div>
+            </main>
+
+            <!-- Right Panel: Data and Insights -->
+            <aside class="right-panel">
+                <div class="glass-panel stat-dashboard">
+                    <h2>Live Statistics</h2>
+                    <ul class="stat-list">
+                        <li><span class="legend-dot susceptible"></span> Susceptible: <strong id="countSusceptible">0</strong></li>
+                        <li><span class="legend-dot infected"></span> Infected: <strong id="countInfected">0</strong></li>
+                        <li><span class="legend-dot recovered"></span> Recovered: <strong id="countRecovered">0</strong></li>
+                        <li><span class="legend-dot vaccinated"></span> Vaccinated: <strong id="countVaccinated">0</strong></li>
+                        <li><span class="legend-dot dead"></span> Dead: <strong id="countDead">0</strong></li>
+                    </ul>
+                </div>
+
+                <div class="glass-panel insights-dashboard">
+                    <div class="insights-header">
+                        <h2>Research Insights</h2>
+                        <span class="live-indicator">LIVE</span>
+                    </div>
+                    <div class="insights-log" id="insightsLog">
+                        <!-- AI Insights injected here -->
+                        <div class="insight-entry initial">
+                            <span class="time">[00:00]</span>
+                            <p>Simulation initialized. Awaiting start command.</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+    
+    <!-- Credits Modal -->
+    <div id="creditsModal" class="modal-overlay hidden">
+        <div class="modal-content glass-panel">
+            <button id="closeCredits" class="close-btn">&times;</button>
+            <h2>Nexus.Sim Credits</h2>
+            <div id="creditsContainer" class="credits-list">
+                <span class="loading-text">Loading credentials...</span>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="main.js"></script>
+</body>
+</html>
